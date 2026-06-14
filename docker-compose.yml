@@ -1,0 +1,69 @@
+services:
+  frontend:
+    build: .
+    container_name: auto-frontend-app
+    ports:
+      - "3000:80"
+    networks:
+      - litebank-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    container_name: litebank-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      # Identificador único del nodo Kafka
+      KAFKA_NODE_ID: 1
+
+      # Kafka trabajará como broker y controller en el mismo contenedor
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      # Define los protocolos internos de comunicación
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+
+      # Listener interno para Docker y listener externo para tu máquina local
+      KAFKA_LISTENERS: PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092
+
+      # Dirección que Kafka anuncia para otros servicios
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+
+      # Listener usado para comunicación entre brokers
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+
+      # Listener usado para el controlador de Kafka
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      # Configuración del controller en modo KRaft
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+
+      # Configuraciones necesarias porque solo tenemos un broker local
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+
+      # ID del cluster local
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    networks:
+      - litebank-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: litebank-kafka-ui
+    ports:
+      - "8080:8080"
+    environment:
+      # Nombre visible del cluster dentro de Kafka UI
+      KAFKA_CLUSTERS_0_NAME: litebank-local
+
+      # Dirección interna del broker Kafka dentro de Docker
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+    depends_on:
+      - kafka
+    networks:
+      - litebank-network
+
+networks:
+  litebank-network:
+    driver: bridge
