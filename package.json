@@ -1,12 +1,13 @@
 {
   "name": "litebank-e2e",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {},
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "description": "Automatización E2E resiliente para registro asíncrono en Lite Bank con Playwright, POM, Docker, Kafka y GitHub Actions.",
+  "type": "module",
+  "scripts": {
+    "test:e2e": "playwright test tests/registro-async.spec.js --project=chromium --workers=1",
+    "test:e2e:3": "playwright test tests/registro-async.spec.js --project=chromium --repeat-each=3 --workers=1",
+    "report": "playwright show-report"
+  },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
     "@types/node": "^25.9.3",
